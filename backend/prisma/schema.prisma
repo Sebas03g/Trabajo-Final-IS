@@ -38,6 +38,22 @@ model Route {
   createdAt DateTime @default(now())
 }
 
+model Mapa {
+  id        Int      @id @default(autoincrement())
+  name      String
+  points    Json
+}
+
+model Guia {
+  id Int @id @default(autoincrement())
+  id_ruta Int
+  puntoActual Int
+  id_robot Int
+
+  ruta Ruta @relation(fields: [id_ruta], references: [id])
+  robot RobotAutomatico @relation(fields: [id_robot], references: [id])
+}
+
 model Dispositivo {
   id        Int      @id @default(autoincrement())
   id_robot Int

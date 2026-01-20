@@ -69,7 +69,7 @@ export const startDirection = async({
   id_asistente,
   id_route,
 }) => {
-
+  
 };
 
 export const makeMovement = async({
