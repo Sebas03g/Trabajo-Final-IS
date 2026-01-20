@@ -24,8 +24,9 @@ export default function (ws, wss) {
       const actualizado = await prisma.dispositivo.update({
         where: {id : Number(data.payload.id)},
         data: {
-            lat: data.payload.punto[0],
-            lng: data.payload.punto[1],
+            lat: data.latitude,
+            lng: data.longitud,
+            cardinalDirection: data.cardinalDirection,
         }
       });
 

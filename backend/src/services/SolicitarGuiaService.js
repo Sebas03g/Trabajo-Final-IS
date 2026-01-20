@@ -1,4 +1,5 @@
 import prisma from "../config/prisma.js";
+import mqttService from '../services/mqttService.js'; 
 
 export const findRouteByDestination = async ({
   id_asistente,
@@ -48,7 +49,7 @@ export const inicializeGuide = async ({
     prisma.robotAutomatico.update({
         where: {id : Number(id_robot)},
         data: {
-            estado: OCUPADO,
+            estado: "OCUPADO",
             rutaActual: id_route
         }
     });
@@ -56,9 +57,26 @@ export const inicializeGuide = async ({
     prisma.asistentedeVoz.update({
         where: {id : Number(id_asistente)},
         data: {
-            estado: OCUPADO
+            estado: "OCUPADO"
         }
     });
 
     
 };
+
+export const startDirection = async({
+  id_robot,
+  id_asistente,
+  id_route,
+}) => {
+
+};
+
+export const makeMovement = async({
+  id_robot,
+  direction
+}) => {
+  const result = await mqttService.sendBasicMovement(id_robot, direction, {
+      speed:50,
+  });
+} 

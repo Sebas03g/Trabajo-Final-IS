@@ -23,6 +23,8 @@ enum Ubicaciones {
   SALIDA
 }
 
+
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -41,6 +43,7 @@ model Dispositivo {
   id_robot Int
   lat Float
   lng Float
+  cardinalDirection Float
 
   robot RobotAutomatico @relation(fields: [id_robot], references: [id])
 }

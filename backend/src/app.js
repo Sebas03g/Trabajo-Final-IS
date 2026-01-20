@@ -4,7 +4,22 @@ import cors from "cors";
 import routeRoutes from "./routes/routeRoutes.js";
 import statusRoutes from "./routes/statusRoutes.js";
 import "./jobs/scheduler.js";
+import mqttService from './services/mqttService.js';
 
+// Conectar al broker MQTT (una sola vez al iniciar)
+mqttService.connect({
+  host: process.env.MQTT_HOST || 'broker.hivemq.com',
+  port: process.env.MQTT_PORT || 1883,
+});
+
+// Escuchar eventos
+mqttService.on('connected', () => {
+  console.log('MQTT listo para enviar comandos');
+});
+
+mqttService.on('robotStatusUpdated', ({ robotId, status }) => {
+  console.log(`Robot ${robotId} cambió a estado: ${status}`);
+});
 const app = express();
 
 // Middlewares

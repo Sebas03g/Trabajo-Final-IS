@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enviar Ubicación</title>
+    <title>Enviar Ubicación y Orientación</title>
     <style>
         * {
             margin: 0;
@@ -70,6 +70,75 @@
             color: white;
         }
         
+        /* BRÚJULA */
+        .compass-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0;
+        }
+        
+        .compass {
+            width: 150px;
+            height: 150px;
+            position: relative;
+            margin: 15px 0;
+        }
+        
+        .compass-face {
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            position: relative;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .compass-needle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 4px;
+            height: 60px;
+            background: #ff4757;
+            transform-origin: 50% 0;
+            transform: translate(-50%, -100%) rotate(0deg);
+            transition: transform 0.1s;
+            border-radius: 2px;
+        }
+        
+        .compass-needle::after {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -6px;
+            width: 16px;
+            height: 16px;
+            background: #ff4757;
+            border-radius: 50%;
+        }
+        
+        .compass-direction {
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 10px;
+            text-align: center;
+        }
+        
+        /* PUNTOS CARDINALES */
+        .cardinal-points {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .north { position: absolute; top: 5px; left: 50%; transform: translateX(-50%); }
+        .east { position: absolute; top: 50%; right: 5px; transform: translateY(-50%); }
+        .south { position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); }
+        .west { position: absolute; top: 50%; left: 5px; transform: translateY(-50%); }
+        
         .data-box {
             background: rgba(255, 255, 255, 0.1);
             border-radius: 10px;
@@ -116,11 +185,27 @@
 </head>
 <body>
     <div class="container">
-        <h1>📍 Enviar Ubicación</h1>
+        <h1>📍 Enviar Ubicación y Orientación</h1>
         <div class="status" id="status">Presiona el botón para comenzar</div>
         
         <button id="startBtn">▶️ Comenzar Envío</button>
         <button id="stopBtn" class="btn-stop" disabled>⏹️ Detener Envío</button>
+        
+        <!-- BRÚJULA -->
+        <div class="compass-container">
+            <div class="compass">
+                <div class="compass-face">
+                    <div class="compass-needle" id="compassNeedle"></div>
+                    <div class="cardinal-points">
+                        <div class="north">N</div>
+                        <div class="east">E</div>
+                        <div class="south">S</div>
+                        <div class="west">W</div>
+                    </div>
+                </div>
+            </div>
+            <div class="compass-direction" id="directionText">--°</div>
+        </div>
         
         <div class="location-info">
             <div class="info-item">
@@ -139,6 +224,14 @@
                 <div class="info-label">Velocidad</div>
                 <div class="info-value" id="speed">-</div>
             </div>
+            <div class="info-item">
+                <div class="info-label">Orientación</div>
+                <div class="info-value" id="heading">-</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Dirección</div>
+                <div class="info-value" id="cardinalDirection">-</div>
+            </div>
         </div>
         
         <div class="last-update" id="lastUpdate">Último envío: Nunca</div>
@@ -150,17 +243,160 @@
     </div>
 
     <script>
-        // Configuración - CAMBIA ESTO con la URL de tu backend
-        const BACKEND_URL = 'http://localhost:3000'; // Cambia a tu URL
+        // Configuración
+        const BACKEND_URL = 'http://localhost:3000';
         const ENDPOINT = '/api/location';
         
         let watchId = null;
         let isSending = false;
+        let lastHeading = null;
         const logDiv = document.getElementById('log');
         const startBtn = document.getElementById('startBtn');
         const stopBtn = document.getElementById('stopBtn');
         const statusDiv = document.getElementById('status');
         const lastUpdateDiv = document.getElementById('lastUpdate');
+        const compassNeedle = document.getElementById('compassNeedle');
+        const directionText = document.getElementById('directionText');
+
+        // Direcciones cardinales
+        const CARDINAL_DIRECTIONS = [
+            'N', 'NNE', 'NE', 'ENE', 
+            'E', 'ESE', 'SE', 'SSE',
+            'S', 'SSW', 'SW', 'WSW', 
+            'W', 'WNW', 'NW', 'NNW'
+        ];
+
+        /**
+         * Convertir grados a dirección cardinal
+         */
+        function degreesToCardinal(degrees) {
+            if (degrees === null || degrees === undefined) return '--';
+            
+            // Normalizar grados a 0-360
+            const normalized = (degrees % 360 + 360) % 360;
+            
+            // Dividir los 360° en 16 segmentos (22.5° cada uno)
+            const index = Math.round(normalized / 22.5) % 16;
+            
+            return CARDINAL_DIRECTIONS[index];
+        }
+
+        /**
+         * Convertir grados a texto descriptivo
+         */
+        function degreesToText(degrees) {
+            if (degrees === null || degrees === undefined) return 'Desconocida';
+            
+            const normalized = (degrees % 360 + 360) % 360;
+            
+            if (normalized >= 337.5 || normalized < 22.5) return 'Norte';
+            if (normalized >= 22.5 && normalized < 67.5) return 'Noreste';
+            if (normalized >= 67.5 && normalized < 112.5) return 'Este';
+            if (normalized >= 112.5 && normalized < 157.5) return 'Sureste';
+            if (normalized >= 157.5 && normalized < 202.5) return 'Sur';
+            if (normalized >= 202.5 && normalized < 247.5) return 'Suroeste';
+            if (normalized >= 247.5 && normalized < 292.5) return 'Oeste';
+            if (normalized >= 292.5 && normalized < 337.5) return 'Noroeste';
+            
+            return 'Desconocida';
+        }
+
+        /**
+         * Actualizar brújula visual
+         */
+        function updateCompass(heading) {
+            if (heading === null || heading === undefined) return;
+            
+            // Rotar la aguja de la brújula
+            compassNeedle.style.transform = `translate(-50%, -100%) rotate(${heading}deg)`;
+            
+            // Actualizar texto
+            const cardinal = degreesToCardinal(heading);
+            const text = degreesToText(heading);
+            directionText.textContent = `${Math.round(heading)}° ${cardinal} (${text})`;
+            
+            // Actualizar UI
+            document.getElementById('heading').textContent = `${heading.toFixed(1)}°`;
+            document.getElementById('cardinalDirection').textContent = cardinal;
+        }
+
+        /**
+         * Obtener orientación del dispositivo (si está disponible)
+         */
+        function startDeviceOrientation() {
+            if (typeof DeviceOrientationEvent !== 'undefined' && 
+                typeof DeviceOrientationEvent.requestPermission === 'function') {
+                
+                // iOS 13+ necesita permiso
+                DeviceOrientationEvent.requestPermission()
+                    .then(permissionState => {
+                        if (permissionState === 'granted') {
+                            window.addEventListener('deviceorientation', handleDeviceOrientation);
+                            addLog("✅ Permiso de orientación concedido");
+                        } else {
+                            addLog("❌ Permiso de orientación denegado", true);
+                        }
+                    })
+                    .catch(console.error);
+            } else if ('ondeviceorientation' in window) {
+                // Dispositivos que no necesitan permiso
+                window.addEventListener('deviceorientation', handleDeviceOrientation);
+                addLog("✅ Orientación del dispositivo activada");
+            } else {
+                addLog("⚠️ Orientación del dispositivo no soportada", true);
+            }
+        }
+
+        /**
+         * Manejar eventos de orientación del dispositivo
+         */
+        function handleDeviceOrientation(event) {
+            // alpha: rotación alrededor del eje z (0-360)
+            // beta: inclinación adelante/atrás (-180 a 180)
+            // gamma: inclinación izquierda/derecha (-90 a 90)
+            
+            if (event.alpha !== null) {
+                lastHeading = event.alpha;
+                updateCompass(event.alpha);
+            }
+        }
+
+        /**
+         * Obtener orientación usando Geolocation API (alternativa)
+         */
+        function getHeadingFromGeolocation(position) {
+            const heading = position.coords.heading;
+            
+            if (heading !== null && !isNaN(heading)) {
+                lastHeading = heading;
+                updateCompass(heading);
+                return heading;
+            }
+            
+            return null;
+        }
+
+        /**
+         * Calcular heading basado en movimiento (si no hay sensor)
+         */
+        function calculateHeadingFromMovement(prevPosition, currentPosition) {
+            if (!prevPosition || !currentPosition) return null;
+            
+            const prevLat = prevPosition.coords.latitude;
+            const prevLng = prevPosition.coords.longitude;
+            const currLat = currentPosition.coords.latitude;
+            const currLng = currentPosition.coords.longitude;
+            
+            // Fórmula para calcular bearing entre dos puntos
+            const y = Math.sin(currLng - prevLng) * Math.cos(currLat);
+            const x = Math.cos(prevLat) * Math.sin(currLat) - 
+                     Math.sin(prevLat) * Math.cos(currLat) * Math.cos(currLng - prevLng);
+            
+            let bearing = Math.atan2(y, x) * (180 / Math.PI);
+            bearing = (bearing + 360) % 360;
+            
+            return bearing;
+        }
 
         // Función para agregar mensajes al log
         function addLog(message, isError = false) {
@@ -174,9 +410,26 @@
             logDiv.scrollTop = logDiv.scrollHeight;
         }
 
+        let lastPosition = null;
+
         // Función para enviar ubicación al backend
         async function sendLocation(position) {
             const { latitude, longitude, accuracy, speed, heading, altitude } = position.coords;
+            
+            // Calcular heading si no está disponible
+            let calculatedHeading = heading;
+            if ((heading === null || isNaN(heading)) && lastPosition) {
+                calculatedHeading = calculateHeadingFromMovement(lastPosition, position);
+            }
+            
+            // Actualizar heading
+            if (calculatedHeading !== null && !isNaN(calculatedHeading)) {
+                lastHeading = calculatedHeading;
+                updateCompass(calculatedHeading);
+            }
+            
+            // Guardar posición para cálculo de heading
+            lastPosition = position;
             
             // Actualizar UI
             document.getElementById('latitude').textContent = latitude.toFixed(6);
@@ -190,10 +443,13 @@
                 longitude: longitude,
                 accuracy: accuracy || null,
                 speed: speed || null,
-                heading: heading || null,
+                heading: calculatedHeading || null,
                 altitude: altitude || null,
+                cardinalDirection: degreesToCardinal(calculatedHeading),
+                orientation: degreesToText(calculatedHeading),
                 timestamp: new Date().toISOString(),
-                battery: null // Podrías agregar info de batería si quieres
+                hasCompass: typeof DeviceOrientationEvent !== 'undefined',
+                battery: null
             };
 
             try {
@@ -210,7 +466,11 @@
                 lastUpdateDiv.textContent = `Último envío: ${now.toLocaleTimeString()}`;
                 
                 if (response.ok) {
-                    addLog(`✅ Ubicación enviada (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`);
+                    const headingText = calculatedHeading ? 
+                        `${calculatedHeading.toFixed(1)}° ${degreesToCardinal(calculatedHeading)}` : 
+                        'Desconocida';
+                    
+                    addLog(`✅ Ubicación enviada (${latitude.toFixed(4)}, ${longitude.toFixed(4)}) Dirección: ${headingText}`);
                     statusDiv.textContent = "Enviando ubicación...";
                     statusDiv.style.color = "#2ed573";
                 } else {
@@ -234,6 +494,9 @@
             addLog("📍 Iniciando seguimiento de ubicación...");
             statusDiv.textContent = "Obteniendo ubicación...";
 
+            // Iniciar sensor de orientación
+            startDeviceOrientation();
+
             const options = {
                 enableHighAccuracy: true,
                 maximumAge: 0,
@@ -244,6 +507,10 @@
             navigator.geolocation.getCurrentPosition(
                 (position) => {
                     addLog("✅ Ubicación obtenida inicialmente");
+                    
+                    // Obtener heading inicial si está disponible
+                    getHeadingFromGeolocation(position);
+                    
                     sendLocation(position);
                     
                     // Iniciar seguimiento continuo
@@ -301,6 +568,9 @@
                 statusDiv.textContent = "Detenido";
                 statusDiv.style.color = "#ffa502";
                 addLog("⏹️ Seguimiento detenido");
+                
+                // Detener eventos de orientación
+                window.removeEventListener('deviceorientation', handleDeviceOrientation);
             }
         }
 
@@ -313,7 +583,7 @@
             addLog("📱 Aplicación cargada");
             addLog(`🌐 Conectando a: ${BACKEND_URL}${ENDPOINT}`);
             
-            // Verificar si hay permisos
+            // Verificar si hay permisos de geolocalización
             if ('permissions' in navigator) {
                 navigator.permissions.query({name: 'geolocation'})
                     .then(permissionStatus => {
