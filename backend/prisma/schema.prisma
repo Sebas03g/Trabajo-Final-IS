@@ -1,0 +1,69 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EstadoRobot {
+  OCUPADO
+  MANTENIMIENTO
+  LIBRE
+}
+
+enum Ubicaciones {
+  BLOQUE_C
+  BLOQUE_B
+  PUERTA_1
+  PUNTO_ESPERA
+  SALIDA
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Route {
+  id        Int      @id @default(autoincrement())
+  name      String
+  points    Json
+  beginning Ubicaciones
+  ending Ubicaciones
+  createdAt DateTime @default(now())
+}
+
+model Dispositivo {
+  id        Int      @id @default(autoincrement())
+  id_robot Int
+  lat Float
+  lng Float
+
+  robot RobotAutomatico @relation(fields: [id_robot], references: [id])
+}
+
+model AsistentedeVoz {
+  id                Int               @id @default(autoincrement())
+  ubicacion         Ubicaciones
+  estado            EstadoRobot @default(LIBRE)
+  id_rutaActual     Int
+
+  robots            RobotAutomatico[] @relation("AsistenteRobot")
+  rutaActual Route @relation(fields: [id_rutaActual], references: [id])
+}
+
+model RobotAutomatico {
+  id                Int               @id @default(autoincrement())
+  estado            EstadoRobot @default(LIBRE)
+  clienteID         String
+  batteryLevel      Int? 
+  id_rutaActual     Int
+  id_dispositivo Int
+
+  dispositivo Dispositivo @relation(fields: [id_dispositivo], references: [id])
+  asistentes        AsistentedeVoz[]  @relation("AsistenteRobot")
+  rutaActual Route @relation(fields: [id_rutaActual], references: [id])
+}

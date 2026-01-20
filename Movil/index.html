@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enviar Ubicación</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: white;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        
+        .status {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        button {
+            width: 100%;
+            padding: 16px;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px 0;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .btn-stop {
+            background: #ff4757;
+            color: white;
+        }
+        
+        .data-box {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .location-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .info-item {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .info-label {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+        
+        .info-value {
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        
+        .last-update {
+            text-align: center;
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📍 Enviar Ubicación</h1>
+        <div class="status" id="status">Presiona el botón para comenzar</div>
+        
+        <button id="startBtn">▶️ Comenzar Envío</button>
+        <button id="stopBtn" class="btn-stop" disabled>⏹️ Detener Envío</button>
+        
+        <div class="location-info">
+            <div class="info-item">
+                <div class="info-label">Latitud</div>
+                <div class="info-value" id="latitude">-</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Longitud</div>
+                <div class="info-value" id="longitude">-</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Precisión</div>
+                <div class="info-value" id="accuracy">-</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Velocidad</div>
+                <div class="info-value" id="speed">-</div>
+            </div>
+        </div>
+        
+        <div class="last-update" id="lastUpdate">Último envío: Nunca</div>
+        
+        <div class="data-box">
+            <div><strong>Log:</strong></div>
+            <div id="log"></div>
+        </div>
+    </div>
+
+    <script>
+        // Configuración - CAMBIA ESTO con la URL de tu backend
+        const BACKEND_URL = 'http://localhost:3000'; // Cambia a tu URL
+        const ENDPOINT = '/api/location';
+        
+        let watchId = null;
+        let isSending = false;
+        const logDiv = document.getElementById('log');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const statusDiv = document.getElementById('status');
+        const lastUpdateDiv = document.getElementById('lastUpdate');
+
+        // Función para agregar mensajes al log
+        function addLog(message, isError = false) {
+            const now = new Date();
+            const time = now.toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.style.color = isError ? '#ff4757' : '#2ed573';
+            logEntry.style.margin = '5px 0';
+            logEntry.textContent = `[${time}] ${message}`;
+            logDiv.appendChild(logEntry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        // Función para enviar ubicación al backend
+        async function sendLocation(position) {
+            const { latitude, longitude, accuracy, speed, heading, altitude } = position.coords;
+            
+            // Actualizar UI
+            document.getElementById('latitude').textContent = latitude.toFixed(6);
+            document.getElementById('longitude').textContent = longitude.toFixed(6);
+            document.getElementById('accuracy').textContent = accuracy ? `${accuracy.toFixed(1)}m` : '-';
+            document.getElementById('speed').textContent = speed ? `${(speed * 3.6).toFixed(1)} km/h` : '-';
+            
+            const locationData = {
+                deviceId: 'mobile-' + Math.random().toString(36).substr(2, 9),
+                latitude: latitude,
+                longitude: longitude,
+                accuracy: accuracy || null,
+                speed: speed || null,
+                heading: heading || null,
+                altitude: altitude || null,
+                timestamp: new Date().toISOString(),
+                battery: null // Podrías agregar info de batería si quieres
+            };
+
+            try {
+                const response = await fetch(`${BACKEND_URL}${ENDPOINT}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(locationData)
+                });
+
+                const result = await response.json();
+                const now = new Date();
+                lastUpdateDiv.textContent = `Último envío: ${now.toLocaleTimeString()}`;
+                
+                if (response.ok) {
+                    addLog(`✅ Ubicación enviada (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`);
+                    statusDiv.textContent = "Enviando ubicación...";
+                    statusDiv.style.color = "#2ed573";
+                } else {
+                    addLog(`❌ Error del servidor: ${result.message || 'Error desconocido'}`, true);
+                }
+            } catch (error) {
+                addLog(`❌ Error de conexión: ${error.message}`, true);
+                statusDiv.textContent = "Error de conexión";
+                statusDiv.style.color = "#ff4757";
+            }
+        }
+
+        // Iniciar seguimiento de ubicación
+        function startTracking() {
+            if (!navigator.geolocation) {
+                addLog("❌ Geolocalización no soportada", true);
+                statusDiv.textContent = "Geolocalización no soportada";
+                return;
+            }
+
+            addLog("📍 Iniciando seguimiento de ubicación...");
+            statusDiv.textContent = "Obteniendo ubicación...";
+
+            const options = {
+                enableHighAccuracy: true,
+                maximumAge: 0,
+                timeout: 10000
+            };
+
+            // Obtener ubicación inmediata
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    addLog("✅ Ubicación obtenida inicialmente");
+                    sendLocation(position);
+                    
+                    // Iniciar seguimiento continuo
+                    watchId = navigator.geolocation.watchPosition(
+                        (position) => {
+                            sendLocation(position);
+                        },
+                        (error) => {
+                            handleGeolocationError(error);
+                        },
+                        options
+                    );
+
+                    isSending = true;
+                    startBtn.disabled = true;
+                    stopBtn.disabled = false;
+                    statusDiv.textContent = "Enviando ubicación automáticamente";
+                },
+                (error) => {
+                    handleGeolocationError(error);
+                },
+                options
+            );
+        }
+
+        // Manejar errores de geolocalización
+        function handleGeolocationError(error) {
+            let message = "";
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    message = "Permiso denegado. Por favor, permite el acceso a la ubicación.";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    message = "Ubicación no disponible.";
+                    break;
+                case error.TIMEOUT:
+                    message = "Tiempo de espera agotado.";
+                    break;
+                default:
+                    message = "Error desconocido.";
+            }
+            addLog(`❌ Error: ${message}`, true);
+            statusDiv.textContent = message;
+            statusDiv.style.color = "#ff4757";
+        }
+
+        // Detener seguimiento
+        function stopTracking() {
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+                isSending = false;
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+                statusDiv.textContent = "Detenido";
+                statusDiv.style.color = "#ffa502";
+                addLog("⏹️ Seguimiento detenido");
+            }
+        }
+
+        // Event Listeners
+        startBtn.addEventListener('click', startTracking);
+        stopBtn.addEventListener('click', stopTracking);
+
+        // Solicitar permisos al cargar
+        window.addEventListener('load', () => {
+            addLog("📱 Aplicación cargada");
+            addLog(`🌐 Conectando a: ${BACKEND_URL}${ENDPOINT}`);
+            
+            // Verificar si hay permisos
+            if ('permissions' in navigator) {
+                navigator.permissions.query({name: 'geolocation'})
+                    .then(permissionStatus => {
+                        if (permissionStatus.state === 'granted') {
+                            addLog("✅ Permiso de ubicación ya concedido");
+                        } else if (permissionStatus.state === 'prompt') {
+                            addLog("❓ Permiso de ubicación pendiente");
+                        }
+                    });
+            }
+        });
+
+        // Manejar cuando la app se vuelve visible
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && isSending) {
+                addLog("📱 App visible de nuevo, reanudando...");
+            }
+        });
+    </script>
+</body>
+</html>
