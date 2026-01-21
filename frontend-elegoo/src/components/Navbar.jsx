@@ -12,6 +12,9 @@ export default function Navbar() {
       <NavLink to="/guia" className="hover:underline">
         Guía
       </NavLink>
+      <NavLink to="/mapas" className="hover:underline">
+        Mapas
+      </NavLink>
     </nav>
   );
 }

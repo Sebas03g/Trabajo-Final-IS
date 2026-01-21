@@ -1,12 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  relationMode = "prisma"
 }
 
 enum EstadoRobot {
@@ -23,8 +17,6 @@ enum Ubicaciones {
   SALIDA
 }
 
-
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -34,55 +26,73 @@ model Route {
   name      String
   points    Json
   beginning Ubicaciones
-  ending Ubicaciones
+  ending    Ubicaciones
   createdAt DateTime @default(now())
+  
+  // Relaciones inversas (opcionales pero útiles)
+  guias     Guia[] @relation("RutaGuia")
+  robots    RobotAutomatico[] @relation("RobotRutaActual")
+  asistentes AsistentedeVoz[] @relation("AsistenteRutaActual")
 }
 
 model Mapa {
   id        Int      @id @default(autoincrement())
   name      String
   points    Json
+  url       String
 }
 
 model Guia {
-  id Int @id @default(autoincrement())
-  id_ruta Int
-  puntoActual Int
-  id_robot Int
-
-  ruta Ruta @relation(fields: [id_ruta], references: [id])
-  robot RobotAutomatico @relation(fields: [id_robot], references: [id])
+  id          Int      @id @default(autoincrement())
+  id_ruta     Int
+  puntoActual Int      @default(0)  // Valor predeterminado
+  id_robot    Int
+  
+  // Hacer las relaciones opcionales o asegurar valores iniciales
+  ruta        Route?          @relation(fields: [id_ruta], references: [id], name: "RutaGuia")
+  robot       RobotAutomatico @relation(fields: [id_robot], references: [id], name: "RobotGuia")
+  
+  // Índices para mejor rendimiento
+  @@index([id_ruta])
+  @@index([id_robot])
 }
 
 model Dispositivo {
-  id        Int      @id @default(autoincrement())
-  id_robot Int
-  lat Float
-  lng Float
-  cardinalDirection Float
-
-  robot RobotAutomatico @relation(fields: [id_robot], references: [id])
+  id                 Int               @id @default(autoincrement())
+  lat                Float
+  lng                Float
+  cardinalDirection  Float
+  
+  // Referencia inversa OPCIONAL
+  robotId            Int?              @unique
+  robot              RobotAutomatico?  @relation(fields: [robotId], references: [id])
+  
+  @@index([robotId])
 }
-
 model AsistentedeVoz {
   id                Int               @id @default(autoincrement())
   ubicacion         Ubicaciones
-  estado            EstadoRobot @default(LIBRE)
-  id_rutaActual     Int
-
+  estado            EstadoRobot       @default(LIBRE)
+  id_rutaActual     Int?
+  
   robots            RobotAutomatico[] @relation("AsistenteRobot")
-  rutaActual Route @relation(fields: [id_rutaActual], references: [id])
+  rutaActual        Route?            @relation(fields: [id_rutaActual], references: [id], name: "AsistenteRutaActual")
 }
 
 model RobotAutomatico {
   id                Int               @id @default(autoincrement())
-  estado            EstadoRobot @default(LIBRE)
+  estado            EstadoRobot       @default(LIBRE)
   clienteID         String
-  batteryLevel      Int? 
-  id_rutaActual     Int
-  id_dispositivo Int
-
-  dispositivo Dispositivo @relation(fields: [id_dispositivo], references: [id])
+  batteryLevel      Int?              @default(100)
+  id_rutaActual     Int?
+  
+  // Relación 1:1 con dispositivo
+  dispositivo       Dispositivo?    
+  
   asistentes        AsistentedeVoz[]  @relation("AsistenteRobot")
-  rutaActual Route @relation(fields: [id_rutaActual], references: [id])
+  rutaActual        Route?            @relation(fields: [id_rutaActual], references: [id], name: "RobotRutaActual")
+  guias             Guia[]            @relation("RobotGuia")
+  
+  @@index([clienteID])
+  @@index([id_rutaActual])
 }

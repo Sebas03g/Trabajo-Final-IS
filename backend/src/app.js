@@ -1,10 +1,19 @@
 // app.js - Configuración de Express (sin WebSocket)
 import express from "express";
 import cors from "cors";
-import routeRoutes from "./routes/routeRoutes.js";
-import statusRoutes from "./routes/statusRoutes.js";
+import routeRoutes from "./rutas/routeRoutes.js";
+import statusRoutes from "./rutas/statusRoutes.js";
 import "./jobs/scheduler.js";
 import mqttService from './services/mqttService.js';
+
+const rutaRoutes = require('./src/rutas/ruta.routes');
+const skillRoutes = require('./src/rutas/skill.routes');
+const mapaRoutes = require('./src/rutas/mapa.routes');
+const guiaRoutes = require('./src/rutas/guia.routes');
+const dispositivoRoutes = require('./src/rutas/dispositivo.routes');
+const asistenteVozRoutes = require('./src/rutas/asistenteVoz.routes');
+const robotRoutes = require('./src/rutas/robot.routes');
+const navegacionRoutes = require('./src/rutas/navegacion.routes');
 
 // Conectar al broker MQTT (una sola vez al iniciar)
 mqttService.connect({
@@ -27,8 +36,14 @@ app.use(cors());
 app.use(express.json());
 
 // Rutas
-app.use("/api/routes", routeRoutes);
-app.use("/api/status", statusRoutes);
+app.use('/api/skill', skillRoutes)
+app.use('/api/rutas', rutaRoutes);
+app.use('/api/mapas', mapaRoutes);
+app.use('/api/guias', guiaRoutes);
+app.use('/api/dispositivos', dispositivoRoutes);
+app.use('/api/asistentes-voz', asistenteVozRoutes);
+app.use('/api/robots', robotRoutes);
+app.use('/api/navegacion', navegacionRoutes);
 
 // Ruta de prueba/health check
 app.get("/", (req, res) => {

@@ -1,11 +1,10 @@
-export const robotControl = async(id_ruta) => {
+/**
+ * Utilidades de navegación y cálculos geográficos
+ */
 
-}
-
-export const asistenteVozControl = async(id_asistente) => {
-    
-}
-
+/**
+ * Convierte dirección cardinal a ángulo en grados
+ */
 function cardinalToAngle(cardinal) {
     const map = {
         'N': 0, 'NNE': 22.5, 'NE': 45, 'ENE': 67.5,
@@ -20,11 +19,6 @@ function cardinalToAngle(cardinal) {
 
 /**
  * Calcula el bearing (rumbo) de un punto a otro en grados (0° = Norte)
- * @param {number} lat1 - Latitud punto actual
- * @param {number} lon1 - Longitud punto actual
- * @param {number} lat2 - Latitud destino
- * @param {number} lon2 - Longitud destino
- * @returns {number} - Ángulo en grados (0-360) desde el Norte
  */
 function calculateBearing(lat1, lon1, lat2, lon2) {
     // Convertir a radianes
@@ -47,10 +41,6 @@ function calculateBearing(lat1, lon1, lat2, lon2) {
 
 /**
  * Determina dirección a girar basado en heading actual y bearing hacia destino
- * @param {number} headingActual - Ángulo actual (0°=Norte)
- * @param {number} bearingDestino - Ángulo hacia destino (0°=Norte)
- * @param {number} umbral - Umbral en grados para considerar "recto" (default 30°)
- * @returns {string} - "recto", "izquierda", "derecha", "atrás"
  */
 function determinarGiro(headingActual, bearingDestino, umbral = 30) {
     // Normalizar diferencia a [-180, 180]
@@ -69,6 +59,9 @@ function determinarGiro(headingActual, bearingDestino, umbral = 30) {
     }
 }
 
+/**
+ * Función principal para navegar hacia destino
+ */
 function navegarHaciaDestino(actual, destino, umbral = 30) {
     const { lat: lat1, lng: lon1, direccionCardinal } = actual;
     const { lat: lat2, lng: lon2 } = destino;
@@ -87,14 +80,36 @@ function navegarHaciaDestino(actual, destino, umbral = 30) {
     diff = ((diff + 180) % 360) - 180;
     
     return {
-        direccion,           // "recto", "izquierda", "derecha", "atrás"
+        direccion,
+        headingActual,
+        bearingDestino,
+        diferenciaAngulo: diff
     };
 }
 
-export function movimiento(actual, destion, id_robot){
-    const direccion = navegarHaciaDestino(actual, destino);
-
-    if(direccion != 'forward'){
-
-    }
+/**
+ * Calcula distancia entre dos puntos en metros
+ */
+function calcularDistancia(lat1, lon1, lat2, lon2) {
+    const R = 6371000; // Radio de la Tierra en metros
+    const φ1 = lat1 * Math.PI / 180;
+    const φ2 = lat2 * Math.PI / 180;
+    const Δφ = (lat2 - lat1) * Math.PI / 180;
+    const Δλ = (lon2 - lon1) * Math.PI / 180;
+    
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    
+    return R * c;
 }
+
+module.exports = {
+    cardinalToAngle,
+    calculateBearing,
+    determinarGiro,
+    navegarHaciaDestino,
+    calcularDistancia
+};
