@@ -1,8 +1,8 @@
-const express = require('express');
-const router = express.Router();
-const navegacionService = require('../servicios/navegacion.service');
-const SolicitarGuiaControlador = require('../controladores/SolicitarGuiaControlador');
+import express from 'express';
+import navegacionService from '../servicios/navegacion.service.js';
+import SolicitarGuiaControlador from '../controladores/SolicitarGuiaControlador.js';
 
+const router = express.Router();
 
 // Calcular ruta óptima
 router.post('/calcular-ruta', async (req, res) => {
@@ -270,4 +270,4 @@ router.post('/robot/:id/mover-hacia', async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

@@ -1,6 +1,8 @@
-const express = require('express');
+// rutas/asistenteVoz.routes.js
+import express from 'express';
+import asistenteVozService from '../servicios/asistenteVoz.service.js';
+
 const router = express.Router();
-const asistenteVozService = require('../servicios/asistenteVoz.service');
 
 // Crear nuevo asistente de voz
 router.post('/', async (req, res) => {
@@ -236,4 +238,4 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

@@ -1,7 +1,7 @@
-const { EstadoRobot } = require('../enums/EstadoRobot');
-const { Ubicaciones } = require('../enums/Ubicaciones');
+import EstadoRobot from '../enums/EstadoRobot.js';
+import Ubicaciones from '../enums/Ubicaciones.js';
 
-class AsistenteVoz {
+export default class AsistenteVoz {
     constructor(id, ubicacion, estado, id_rutaActual, rutaActual = null, robots = []) {
         this.id = id;
         this.ubicacion = ubicacion;
@@ -89,5 +89,3 @@ class AsistenteVoz {
         };
     }
 }
-
-module.exports = AsistenteVoz;

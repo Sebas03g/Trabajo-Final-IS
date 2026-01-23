@@ -1,7 +1,7 @@
-const { PrismaClient } = require('@prisma/client');
-const rutaService = require('./ruta.service');
-const mapaService = require('./mapa.service');
-const navegacionService = require('./navegacion.service');
+import { PrismaClient } from '@prisma/client';
+import rutaService from './ruta.service.js';
+import mapaService from './mapa.service.js';
+import navegacionService from './navegacion.service.js';
 
 class SkillService {
     constructor() {
@@ -12,10 +12,10 @@ class SkillService {
     /**
      * Procesar solicitud de guía desde el skill
      */
-    async procesarSolicitudGuia({ intent, ubicacionDestino, idUsuario, contexto }) {
+    async procesarSolicitudGuia({ intent, ubicacionDestino,ubicacionDispositivo, idUsuario, contexto }) {
         try {
             // 1. Determinar ubicación actual del usuario (podría venir del contexto o asumir default)
-            const ubicacionActual = await this.determinarUbicacionActual(contexto);
+            const ubicacionActual = ubicacionDispositivo;
             
             // 2. Buscar ruta disponible
             const rutas = await this.prisma.route.findMany({
@@ -181,32 +181,21 @@ class SkillService {
         return {
             sessionId,
             respuestaVoz: {
-                texto: `Te guiaré al ${ruta.ending}. He asignado el robot ${robot.clienteID}. ${instrucciones}`,
-                ssml: `<speak>Te guiaré al ${ruta.ending}. He asignado el robot <say-as interpret-as="characters">${robot.clienteID}</say-as>. ${instrucciones}</speak>`
+                texto: `Te guiaré al ${ruta.ending}. He asignado el robot ${robot.clienteID}.`,
+                ssml: `<speak>Te guiaré al ${ruta.ending}. He asignado el robot <say-as interpret-as="characters">${robot.clienteID}</say-as>.`
             },
-            visual: {
+            // CAMBIA "visual" POR "ruta" aquí:
+            ruta: {
                 tipo: 'mapa_con_ruta',
                 titulo: `Ruta a ${ruta.ending}`,
-                imagenMapa: mapa.url, // URL del mapa
-                puntosRuta: puntosFormateados.map((punto, index) => ({
-                    id: index + 1,
-                    x: punto.x || punto.lat || 0,
-                    y: punto.y || punto.lng || 0,
-                    esDestino: index === puntosFormateados.length - 1
+                url_imagen: mapa.url,  // CAMBIA "imagenMapa" POR "url_imagen"
+                puntos: puntosFormateados.map(punto => ({  // CAMBIA "puntosRuta" POR "puntos"
+                    x_img: punto.x_img || punto.x || 0,    // Asegura que tenga x_img
+                    y_img: punto.y_img || punto.y || 0,    // Asegura que tenga y_img
+                    orden: punto.orden || 0
                 })),
-                puntoInicio: {
-                    nombre: ruta.beginning,
-                    coordenadas: puntosFormateados[0] || { x: 0, y: 0 }
-                },
-                puntoDestino: {
-                    nombre: ruta.ending,
-                    coordenadas: puntosFormateados[puntosFormateados.length - 1] || { x: 0, y: 0 }
-                },
-                robot: {
-                    id: robot.id,
-                    nombre: robot.clienteID,
-                    bateria: robot.batteryLevel
-                }
+                beginning: ruta.beginning,  // Agrega esto
+                ending: ruta.ending         // Agrega esto
             },
             metadata: {
                 rutaId: ruta.id,
@@ -404,4 +393,5 @@ class SkillService {
     }
 }
 
-module.exports = new SkillService();
+const skillService = new SkillService();
+export default skillService;

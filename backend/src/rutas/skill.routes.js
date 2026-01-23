@@ -1,6 +1,6 @@
-const express = require('express');
+import express from 'express';
+import skillService from '../servicios/skill.service.js';
 const router = express.Router();
-const skillService = require('../servicios/skill.service');
 
 // Middleware para validar peticiones del skill
 const validarSkillRequest = (req, res, next) => {
@@ -28,12 +28,13 @@ const validarSkillRequest = (req, res, next) => {
 // Endpoint principal para el skill
 router.post('/guiar', validarSkillRequest, async (req, res) => {
     try {
-        const { intent, ubicacionDestino, idUsuario, contexto } = req.body;
+        const { intent, ubicacionDestino, idUsuario, ubicacionDispositivo, contexto } = req.body;
         
         // Procesar la solicitud del skill
         const respuesta = await skillService.procesarSolicitudGuia({
             intent,
             ubicacionDestino: ubicacionDestino.toUpperCase(),
+            ubicacionDispositivo,
             idUsuario,
             contexto
         });
@@ -115,4 +116,4 @@ router.post('/webhook/actualizacion', async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

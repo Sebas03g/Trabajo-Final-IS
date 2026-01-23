@@ -1,4 +1,4 @@
-class Robot {
+export default class Robot {
     constructor(id, estado, clienteID, batteryLevel, id_rutaActual, id_dispositivo) {
         this.id = id;
         this.estado = estado; // 'OCUPADO', 'MANTENIMIENTO', 'LIBRE'
@@ -38,5 +38,3 @@ class Robot {
         );
     }
 }
-
-module.exports = Robot;

@@ -1,5 +1,5 @@
 import { Outlet } from "react-router-dom";
-import Navbar from "../components/Navbar"; // ✅ IMPORT CORRECTO
+import Navbar from "../componentesReutilizables/Navbar"; // ✅ IMPORT CORRECTO
 
 export default function MainLayout() {
   return (

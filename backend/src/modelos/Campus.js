@@ -1,4 +1,4 @@
-class Campus {
+export default class Campus {
     constructor(id, name, points, edificios, zonasRestringidas, puntosInteres) {
         this.id = id;
         this.name = name;
@@ -44,5 +44,3 @@ class Campus {
         );
     }
 }
-
-module.exports = Campus;

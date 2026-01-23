@@ -1,4 +1,4 @@
-class Usuario {
+export default class Usuario {
     constructor(id, nombre, email, rol, fechaRegistro) {
         this.id = id;
         this.nombre = nombre;
@@ -26,5 +26,3 @@ class Usuario {
         );
     }
 }
-
-module.exports = Usuario;

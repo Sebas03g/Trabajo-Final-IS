@@ -1,4 +1,4 @@
-class Guia {
+export default class Guia {
     constructor(id, id_ruta, puntoActual, id_robot, ruta = null, robot = null) {
         this.id = id;
         this.id_ruta = id_ruta;
@@ -98,5 +98,3 @@ class Guia {
         };
     }
 }
-
-module.exports = Guia;

@@ -1,4 +1,4 @@
-class Anomalia {
+export default class Anomalia {
     constructor(id, tipo, idDispositivo, descripcion, fechaDeteccion, estado, nivelUrgencia) {
         this.id = id;
         this.tipo = tipo; // 'hardware', 'software', 'conectividad'
@@ -34,5 +34,3 @@ class Anomalia {
         );
     }
 }
-
-module.exports = Anomalia;

@@ -1,7 +1,9 @@
-const dispositivoService = require('../servicios/dispositivo.service');
-const navegacionService = require('../servicios/navegacion.service');
+// ws/locationHandler.js (archivo separado)
+import dispositivoService from '../servicios/dispositivo.service.js';
+import navegacionService from '../servicios/navegacion.service.js';
+import guiaService from '../servicios/guia.service.js';
 
-module.exports = function (ws, wss) {
+export default function locationHandler(ws, wss) {
     ws.on("message", async (message) => {
         try {
             const data = JSON.parse(message);
@@ -32,7 +34,6 @@ module.exports = function (ws, wss) {
             );
             
             // Verificar si el robot tiene guía activa
-            const guiaService = require('../servicios/guia.service');
             const guia = await guiaService.obtenerGuiaPorRobot(data.payload.id);
             
             if (guia && !guia.estaCompletada()) {
@@ -45,6 +46,22 @@ module.exports = function (ws, wss) {
                 payload: actualizado
             }));
             
+            // Emitir a todos los clientes WebSocket
+            wss.clients.forEach((client) => {
+                if (client.readyState === ws.OPEN) {
+                    client.send(JSON.stringify({
+                        type: "LOCATION_UPDATE",
+                        robotId: data.payload.id,
+                        location: {
+                            lat: data.payload.lat,
+                            lng: data.payload.lng,
+                            direction: data.payload.cardinalDirection
+                        },
+                        timestamp: new Date().toISOString()
+                    }));
+                }
+            });
+            
         } catch (err) {
             console.error("Error en WebSocket:", err);
             ws.send(JSON.stringify({
@@ -53,4 +70,12 @@ module.exports = function (ws, wss) {
             }));
         }
     });
-};
+    
+    ws.on("close", () => {
+        console.log("[WS] Cliente desconectado");
+    });
+    
+    ws.on("error", (error) => {
+        console.error("[WS] Error:", error);
+    });
+}

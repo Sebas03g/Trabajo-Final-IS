@@ -1,6 +1,7 @@
 datasource db {
   provider = "postgresql"
   relationMode = "prisma"
+  url      = env("DATABASE_URL")
 }
 
 enum EstadoRobot {
@@ -27,9 +28,11 @@ model Route {
   points    Json
   beginning Ubicaciones
   ending    Ubicaciones
+  id_mapa Int
   createdAt DateTime @default(now())
   
   // Relaciones inversas (opcionales pero útiles)
+  mapa Mapa @relation(fields: [id_mapa], references: [id])
   guias     Guia[] @relation("RutaGuia")
   robots    RobotAutomatico[] @relation("RobotRutaActual")
   asistentes AsistentedeVoz[] @relation("AsistenteRutaActual")
@@ -38,8 +41,10 @@ model Route {
 model Mapa {
   id        Int      @id @default(autoincrement())
   name      String
-  points    Json
+  points    Json?
   url       String
+
+  rutas Route[]
 }
 
 model Guia {

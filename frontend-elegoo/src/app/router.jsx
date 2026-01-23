@@ -1,18 +1,20 @@
 import { createBrowserRouter } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
-import Home from "../pages/Home";
-import Rutas from "../pages/Rutas";
-import Guia from "../pages/Guia";
-import Mapas from "../pages/Mapas";
+import Home from "../PaginasPrincipales/Home";
+import Rutas from "../PaginasPrincipales/Rutas";
+import Mapas from "../PaginasPrincipales/Mapas";
+import CreateMaps from "../PaginasPrincipales/CrearMapa";
+import CreateRoutes from "../PaginasPrincipales/CrearRuta";
 
 const router = createBrowserRouter([
   {
     element: <MainLayout />,
     children: [
       { path: "/", element: <Home /> },
+      { path: "/crear-rutas", element: <CreateRoutes /> },
       { path: "/rutas", element: <Rutas /> },
-      { path: "/guia", element: <Guia /> },
-      { path: "/Mapas", element: <Mapas /> },
+      { path: "/crear-mapas", element: <CreateMaps /> },
+      { path: "/mapas", element: <Mapas /> },
     ],
   },
 ]);

@@ -1,7 +1,8 @@
-const { PrismaClient } = require('@prisma/client');
-const Ruta = require('../models/Ruta');
-const RobotAutomatico = require('../models/RobotAutomatico');
-const Dispositivo = require('../models/Dispositivo');
+import Ruta from '../modelos/Ruta.js';
+import Dispositivo from '../modelos/Dispositivo.js';
+import RobotAutomatico from '../modelos/RobotAutomatico.js';
+import { PrismaClient } from '@prisma/client';
+
 
 class NavegacionService {
     constructor() {
@@ -391,4 +392,5 @@ class NavegacionService {
     }
 }
 
-module.exports = new NavegacionService();
+const navegacionService = new NavegacionService();
+export default navegacionService; 

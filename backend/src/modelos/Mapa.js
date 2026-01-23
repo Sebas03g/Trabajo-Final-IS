@@ -1,4 +1,4 @@
-class Mapa {
+export default class Mapa {
     constructor(id, name, url, points) {
         this.id = id;
         this.name = name;
@@ -82,5 +82,3 @@ class Mapa {
         };
     }
 }
-
-module.exports = Mapa;

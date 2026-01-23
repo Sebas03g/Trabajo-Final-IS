@@ -1,6 +1,6 @@
-const { PrismaClient } = require('@prisma/client');
-const { EstadoRobot } = require('../enums/EstadoRobot');
-const RobotAutomatico = require('../models/RobotAutomatico');
+import { PrismaClient } from '@prisma/client';
+import EstadoRobot from '../enums/EstadoRobot.js';
+import RobotAutomatico from '../modelos/RobotAutomatico.js';
 
 class RobotService {
     constructor() {
@@ -331,4 +331,5 @@ class RobotService {
     }
 }
 
-module.exports = new RobotService();
+const robotService = new RobotService();
+export default robotService;

@@ -1,4 +1,4 @@
-class Dispositivo {
+export default class Dispositivo {
     constructor(id, id_robot, lat, lng, cardinalDirection) {
         this.id = id;
         this.id_robot = id_robot;
@@ -41,5 +41,3 @@ class Dispositivo {
         );
     }
 }
-
-module.exports = Dispositivo;

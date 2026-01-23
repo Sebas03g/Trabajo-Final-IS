@@ -6,4 +6,4 @@ const Ubicaciones = {
     SALIDA: 'SALIDA'
 };
 
-module.exports = { Ubicaciones };
+export default Ubicaciones;

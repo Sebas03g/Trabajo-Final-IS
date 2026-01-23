@@ -1,6 +1,6 @@
-const express = require('express');
+import express from 'express';
+import robotService from '../servicios/robot.service.js';
 const router = express.Router();
-const robotService = require('../servicios/robot.service');
 
 // Crear nuevo robot
 router.post('/', async (req, res) => {
@@ -330,4 +330,4 @@ router.get('/:id/puede-asignar-ruta', async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

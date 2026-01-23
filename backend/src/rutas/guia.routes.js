@@ -1,6 +1,7 @@
-const express = require('express');
+import express from 'express';
+import guiaService from "../servicios/guia.service.js"
+
 const router = express.Router();
-const guiaService = require('../servicios/guia.service');
 
 // Crear nueva guía
 router.post('/', async (req, res) => {
@@ -203,4 +204,4 @@ router.post('/:id/reanudar/:punto', async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

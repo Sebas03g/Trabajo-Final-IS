@@ -1,5 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
-const Ruta = require('../models/Ruta');
+import { PrismaClient } from '@prisma/client';
+import Ruta from '../modelos/Ruta.js';
 
 class RutaService {
     constructor() {
@@ -13,7 +13,8 @@ class RutaService {
                     name: datos.name,
                     points: datos.points,
                     beginning: datos.beginning,
-                    ending: datos.ending
+                    ending: datos.ending,
+                    id_mapa: datos.id_mapa
                 }
             });
             
@@ -45,7 +46,7 @@ class RutaService {
                 orderBy: { createdAt: 'desc' }
             });
             
-            return rutasData.map(ruta => Ruta.fromPrisma(ruta));
+            return rutasData.map(ruta => ruta.toJSON ? ruta.toJSON() : ruta);
         } catch (error) {
             throw new Error(`Error al obtener rutas: ${error.message}`);
         }
@@ -59,7 +60,8 @@ class RutaService {
                     name: datos.name,
                     points: datos.points,
                     beginning: datos.beginning,
-                    ending: datos.ending
+                    ending: datos.ending,
+                    id_mapa: datos.id_mapa
                 }
             });
             
@@ -145,4 +147,5 @@ class RutaService {
     }
 }
 
-module.exports = new RutaService();
+const rutaService = new RutaService();
+export default rutaService;

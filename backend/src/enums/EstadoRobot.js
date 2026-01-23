@@ -4,4 +4,4 @@ const EstadoRobot = {
     LIBRE: 'LIBRE'
 };
 
-module.exports = { EstadoRobot };
+export default EstadoRobot;

@@ -1,10 +1,11 @@
-class Ruta {
-    constructor(id, name, points, beginning, ending, createdAt) {
+export default class Ruta {
+    constructor(id, name, points, beginning, ending, id_mapa, createdAt) {
         this.id = id;
         this.name = name;
         this.points = points; // JSON con puntos de la ruta
         this.beginning = beginning; // Ubicaciones enum
         this.ending = ending; // Ubicaciones enum
+        this.id_mapa = id_mapa;
         this.createdAt = createdAt;
     }
 
@@ -35,5 +36,3 @@ class Ruta {
         );
     }
 }
-
-module.exports = Ruta;

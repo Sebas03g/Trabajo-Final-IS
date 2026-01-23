@@ -1,4 +1,4 @@
-class Mantenimiento {
+export default class Mantenimiento {
     constructor(id, idRobot, tipo, fechaProgramada, fechaRealizado, estado, descripcion) {
         this.id = id;
         this.idRobot = idRobot;
@@ -41,5 +41,3 @@ class Mantenimiento {
         );
     }
 }
-
-module.exports = Mantenimiento;
